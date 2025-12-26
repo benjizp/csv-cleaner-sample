@@ -1,10 +1,5 @@
 
-# HOW TO USE:
-# 1. Put all your messy CSV files in a folder called 'input_csvfiles'
-# 2. Double-click this file
-# 3. Get your clean file: 'combined_clean.csv'
-#
-# That's it. No installation needed.
+
 
 
 import csv , os 
@@ -76,6 +71,13 @@ def row_key(clean_row: Dict[str,str]) -> Tuple:
         return('email' , clean_row["email"])
     return('row' , clean_row["email"], clean_row['name'] , clean_row['phone'])
 
+def looks_like_email(s: str) -> bool:
+    s = s.strip()
+    if not s:
+        return False
+    # lightweight validation
+    return('@' in s) and ('.' in s) and (s.count('@') == 1)
+
 def main() -> None:
 
     files_processed = 0
@@ -83,6 +85,7 @@ def main() -> None:
     rows_written = 0
     rows_skipped_empty = 0
     dupes_removed = 0
+    rows_skipped_invalid_email = 0
 
     seen = set()
     output_rows: List[Dict[str, str]] = [] #List[Dict[str, str]] is just a type hint.
@@ -113,6 +116,10 @@ def main() -> None:
                     rows_skipped_empty +=1
                     continue
 
+                if not looks_like_email(clean_row['email']):
+                    rows_skipped_invalid_email += 1
+                    continue
+
                 key = row_key(clean_row)
                 if key in seen:
                     dupes_removed += 1
@@ -132,6 +139,7 @@ def main() -> None:
     print(f'Wrote {rows_written} rows')
     print(f'Skipped {rows_skipped_empty} empty ')
     print(f'Removed {dupes_removed} duplicates')
+    print(f'Skipped {rows_skipped_invalid_email} invalid email')
 
 if __name__ == '__main__':
     if not os.path.isdir(INPUT_FOLDER):
